@@ -12,7 +12,8 @@ class Company(models.Model):
 
 
 class Image(models.Model):
-    image = models.FileField()
+    image = models.CharField(max_length=500, null=True)
+    file_image = models.FileField(null=True)
 
 
 class City(models.Model):
@@ -31,7 +32,7 @@ class Vacancy(models.Model):
     description = models.TextField(max_length=5000)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
     locations = models.ManyToManyField(City, blank=True)
-    # image_list = models.ManyToManyField(Image)
+    image_list = models.ManyToManyField(Image, blank=True)
 
     def __str__(self):
         return self.title

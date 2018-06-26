@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-from django.core.management.base import BaseCommand, CommandError
+import os
+from urllib.request import urlretrieve
+from django.core.management.base import BaseCommand
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.keys import Keys
 
 from recruiting.models import Vacancy, Company, Image, City
+from test_task_WebDriver.settings import MEDIA_ROOT
 
 
 class Command(BaseCommand):
@@ -61,6 +63,7 @@ class Command(BaseCommand):
             ).text
 
             location_objects = self.get_locations()
+            images_array = self.get_images()
 
             vacancy = Vacancy()
             vacancy.is_active = True
@@ -70,9 +73,12 @@ class Command(BaseCommand):
             vacancy.save()
 
             vacancy.locations.add(*location_objects)
-            vacancy.save()
 
-            # image_list =
+            vacancy.image_list.add(
+                *[obj for obj in Image.objects.filter(image__in=images_array)]
+            )
+
+            vacancy.save()
 
             return vacancy.id
 
@@ -101,6 +107,30 @@ class Command(BaseCommand):
             location_objects.append(location)
 
         return location_objects
+
+    def get_images(self):
+        elements = self.driver.find_elements_by_xpath(
+            "//div[@class='quadruple-media__media-list']/div/img"
+        )
+
+        images_array = []
+        for element in elements:
+            url = element.get_attribute('src')
+            images_array.append(url)
+
+            check_for_exist = Image.objects.filter(image=url)
+            if not check_for_exist:
+                image = Image()
+                image.image = url
+
+                path_to_images = os.path.join(MEDIA_ROOT, "images/")
+                filename = url.split("/")[-1]
+                file = os.path.join(path_to_images, filename)
+                urlretrieve(url, filename=file)
+
+                image.file_image.name = "images/{0}".format(filename)
+                image.save()
+        return images_array
 
     def check_vacancies_in_db(self, actual_vacancies):
         deactivate_vacancies = Vacancy.objects.exclude(id__in=actual_vacancies)
