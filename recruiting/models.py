@@ -15,6 +15,9 @@ class Image(models.Model):
     image = models.CharField(max_length=500, null=True)
     file_image = models.FileField(null=True)
 
+    def __str__(self):
+        return self.image
+
 
 class City(models.Model):
     name = models.CharField(max_length=50)
@@ -41,8 +44,16 @@ class Vacancy(models.Model):
         verbose_name_plural = 'Vacancies'
 
 
+class Screenshot(models.Model):
+    screen_name = models.CharField(max_length=500, null=True)
+    file_screen = models.FileField(null=True)
+
+    def __str__(self):
+        return self.screen_name
+
+
 class ExchangeResult(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
     created = models.DateField()
     success = models.BooleanField()
-    screenshot_list = models.ManyToManyField(Image)
+    screenshot_list = models.ManyToManyField(Screenshot)
