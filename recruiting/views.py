@@ -10,11 +10,13 @@ from recruiting.serializers import VacancySerializer, \
 class VacancyViewSet(viewsets.ModelViewSet):
     queryset = Vacancy.objects.all()
     serializer_class = VacancySerializer
+    filter_fields = ('title', 'company', 'is_active', 'locations')
 
 
 class ExchangeResultViewSet(viewsets.ModelViewSet):
     queryset = ExchangeResult.objects.all()
     serializer_class = ExchangeResultSerializer
+    filter_fields = ('vacancy', 'success')
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
