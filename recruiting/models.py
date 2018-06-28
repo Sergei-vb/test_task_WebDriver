@@ -54,6 +54,6 @@ class Screenshot(models.Model):
 
 class ExchangeResult(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
-    created = models.DateField()
+    created = models.DateTimeField()
     success = models.BooleanField()
     screenshot_list = models.ManyToManyField(Screenshot)

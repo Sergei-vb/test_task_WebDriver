@@ -2,12 +2,13 @@
 import datetime
 import json
 import os
+from urllib import parse
 from urllib.request import urlretrieve
 
 from django.core.management.base import BaseCommand
 from selenium import webdriver
 
-from recruiting.models import Screenshot
+from recruiting.models import Screenshot, ExchangeResult, Vacancy
 from test_task_WebDriver.settings import MEDIA_ROOT
 
 
@@ -16,6 +17,8 @@ class Command(BaseCommand):
 
     def __init__(self):
         super().__init__()
+
+        self.data = {}
 
         self.catalog_name = datetime.datetime.now().isoformat()
         self.path_to_screenshots = os.path.join(
@@ -33,13 +36,14 @@ class Command(BaseCommand):
         url = options['url'][0]
 
         # try:
-        first_page_data = self.handle_first_page(url)
-        second_page_data = self.handle_second_page(first_page_data)
+        self.handle_first_page(url)
+        second_page_data = self.handle_second_page()
         third_page_data = self.handle_third_page(second_page_data)
         result = self.handle_fourth_page(third_page_data)
 
         instances_array = self.create_screenshot_instances(self.screenshots)
         self.create_exchange_result(instances_array, result)
+        import time;time.sleep(30)
 
         # self.driver.close()
         # except:
@@ -55,6 +59,9 @@ class Command(BaseCommand):
         title = self.driver.find_element_by_xpath(
             "//h3[@class='title title--section']"
         ).text
+        company = self.driver.find_element_by_xpath(
+            "//h1[@class='title title--left']/a"
+        ).text
         location = self.driver.find_element_by_xpath(
             "//div[@class='vacancies-info']/strong"
         ).text
@@ -63,16 +70,16 @@ class Command(BaseCommand):
             "js-application-button--online']"
         ).get_attribute("href")
 
-        data_return = {
-            "link_element": link_element, "title": title, "location": location
-        }
-        return data_return
+        self.data.update({
+            "link_element": link_element, "title": title,
+            "location": location, "company": company
+        })
 
-    def handle_second_page(self, data):
-        link_element = data["link_element"]
-        title = data["title"]
+    def handle_second_page(self):
+        link_element = self.data["link_element"]
+        title = self.data["title"]
         title = title if not title.endswith(" (m/w)") else title[:-6]
-        location = data["location"]
+        location = self.data["location"]
         self.driver.get(link_element)
 
         self.do_screenshot(2)
@@ -198,9 +205,16 @@ class Command(BaseCommand):
         ).click()
         self.do_screenshot(19)
 
-        # save
+        self.driver.find_element_by_xpath(
+            "//input[@id='bewerben']"
+        ).click()
+        self.do_screenshot(20)
 
-        # return result
+        current_url = self.driver.current_url
+        print(current_url)
+        par = parse.parse_qs(parse.urlparse(current_url).query)
+
+        return par.get("update") == ["ok"]
 
     def do_screenshot(self, number):
         screen = os.path.join(
@@ -224,5 +238,14 @@ class Command(BaseCommand):
         return instances_array
 
     def create_exchange_result(self, instances_array, result):
-        # create instances exchange array
-        pass
+        instance = ExchangeResult()
+        vacancy = Vacancy.objects.get(
+            title=self.data["title"], company__name=self.data["company"]
+        )
+        instance.vacancy = vacancy
+        instance.created = datetime.datetime.now().isoformat()
+        instance.success = result
+        instance.save()
+
+        instance.screenshot_list.add(*instances_array)
+        instance.save()
