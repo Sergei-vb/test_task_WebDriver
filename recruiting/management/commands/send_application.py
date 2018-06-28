@@ -35,21 +35,21 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         url = options['url'][0]
 
-        # try:
-        self.handle_first_page(url)
-        second_page_data = self.handle_second_page()
-        third_page_data = self.handle_third_page(second_page_data)
-        result = self.handle_fourth_page(third_page_data)
+        try:
+            self.handle_first_page(url)
+            second_page_data = self.handle_second_page()
+            third_page_data = self.handle_third_page(second_page_data)
+            result = self.handle_fourth_page(third_page_data)
 
-        instances_array = self.create_screenshot_instances(self.screenshots)
-        self.create_exchange_result(instances_array, result)
-        import time;time.sleep(30)
+            instances_array = self.create_screenshot_instances(
+                self.screenshots)
+            self.create_exchange_result(instances_array, result)
 
-        # self.driver.close()
-        # except:
-        #     self.stderr.write("Unsuccessfully")
-        # else:
-        #     self.stdout.write(self.style.SUCCESS('Successfully'))
+            self.driver.close()
+        except:
+            self.stderr.write("Unsuccessfully")
+        else:
+            self.stdout.write(self.style.SUCCESS('Successfully'))
 
     def handle_first_page(self, url):
         self.driver.get(url)
