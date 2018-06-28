@@ -5,6 +5,7 @@ from recruiting.models import Vacancy, ExchangeResult, Company, City, Image,\
 from recruiting.serializers import VacancySerializer, \
     ExchangeResultSerializer, CompanySerializer, CitySerializer, \
     ImageSerializer, ScreenshotSerializer
+from recruiting.filters import ExchangeResultFilter
 
 
 class VacancyViewSet(viewsets.ModelViewSet):
@@ -16,7 +17,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
 class ExchangeResultViewSet(viewsets.ModelViewSet):
     queryset = ExchangeResult.objects.all()
     serializer_class = ExchangeResultSerializer
-    filter_fields = ('vacancy', 'success')
+    filter_class = ExchangeResultFilter
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
