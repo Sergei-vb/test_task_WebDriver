@@ -28,7 +28,9 @@ class Command(BaseCommand):
         os.mkdir(self.path_to_screenshots)
 
         self.screenshots = []
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(
+            os.path.join(settings.BASE_DIR, "drivers/chromedriver")
+        )
 
     def add_arguments(self, parser):
         parser.add_argument('url', nargs='+', type=str)
