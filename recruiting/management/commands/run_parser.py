@@ -15,7 +15,9 @@ class Command(BaseCommand):
 
     def __init__(self):
         super().__init__()
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(
+            settings.BASE_DIR + "/drivers/chromedriver"
+        )
 
     def handle(self, *args, **options):
         try:
