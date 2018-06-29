@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os
 from urllib.request import urlretrieve
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 
 from recruiting.models import Vacancy, Company, Image, City
-from test_task_WebDriver.settings import MEDIA_ROOT
 
 
 class Command(BaseCommand):
@@ -34,11 +35,12 @@ class Command(BaseCommand):
                 self.driver.back()
 
             self.check_vacancies_in_db(actual_vacancies)
-            self.driver.close()
         except:
             self.stderr.write("Unsuccessfully")
         else:
             self.stdout.write(self.style.SUCCESS('Successfully'))
+        finally:
+            self.driver.close()
 
     def link_parser(self, link):
         self.driver.get(link)
@@ -52,37 +54,22 @@ class Command(BaseCommand):
             "//h3[@class='title title--section']"
         ).text
 
-        exist_in_db = Vacancy.objects.filter(
-            title=title,
-            company=company
-        )
+        vacancy_qs = Vacancy.objects.filter(title=title, company=company)
 
-        if not exist_in_db:
-            description = self.driver.find_element_by_xpath(
-                "//div[@class='entity-description__description']"
-            ).text
+        if vacancy_qs.exists():
+            return vacancy_qs.get().id
 
-            location_objects = self.get_locations()
-            images_array = self.get_images()
+        description = self.driver.find_element_by_xpath(
+            "//div[@class='entity-description__description']"
+        ).text
 
-            vacancy = Vacancy()
-            vacancy.is_active = True
-            vacancy.title = title
-            vacancy.description = description
-            vacancy.company = company
-            vacancy.save()
-
-            vacancy.locations.add(*location_objects)
-
-            vacancy.image_list.add(
-                *[obj for obj in Image.objects.filter(image__in=images_array)]
-            )
-
-            vacancy.save()
-
-            return vacancy.id
-
-        vacancy = Vacancy.objects.get(title=title, company=company)
+        location_objects = self.get_locations()
+        images_array = self.get_images()
+        vacancy = Vacancy.objects.create(is_active=True, title=title,
+                                         description=description,
+                                         company=company)
+        vacancy.locations.add(*location_objects)
+        vacancy.image_list.add(*Image.objects.filter(image__in=images_array))
         return vacancy.id
 
     def get_locations(self):
@@ -120,21 +107,17 @@ class Command(BaseCommand):
 
             check_for_exist = Image.objects.filter(image=url)
             if not check_for_exist:
+                path_to_images = os.path.join(settings.MEDIA_ROOT, "images/")
+                filename = url.split("/")[-1]
+                file_path = os.path.join(path_to_images, filename)
+                urlretrieve(url, filename=file_path)
+
                 image = Image()
                 image.image = url
-
-                path_to_images = os.path.join(MEDIA_ROOT, "images/")
-                filename = url.split("/")[-1]
-                file = os.path.join(path_to_images, filename)
-                urlretrieve(url, filename=file)
-
                 image.file_image.name = "images/{0}".format(filename)
                 image.save()
         return images_array
 
     def check_vacancies_in_db(self, actual_vacancies):
-        deactivate_vacancies = Vacancy.objects.exclude(id__in=actual_vacancies)
-        if deactivate_vacancies:
-            for vacancy in deactivate_vacancies:
-                vacancy.is_active = False
-                vacancy.save()
+        Vacancy.objects.exclude(id__in=actual_vacancies).update(
+            is_active=False)
