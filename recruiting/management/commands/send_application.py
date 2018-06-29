@@ -118,9 +118,7 @@ class Command(BaseCommand):
             settings.MEDIA_ROOT, "exchange_handler/"
         )
 
-        path_to_datafile = os.path.join(path_to_storage, "exchange_data.json")
-        with open(path_to_datafile, "r") as file:
-            data = json.load(file)
+        data = settings.DATA_ENV_VAR
 
         self.driver.find_element_by_xpath(
             "//select[@name='geschlecht']/option[@value='{0}']".format(
@@ -214,7 +212,6 @@ class Command(BaseCommand):
         self.do_screenshot(20)
 
         current_url = self.driver.current_url
-        print(current_url)
         par = parse.parse_qs(parse.urlparse(current_url).query)
 
         return par.get("update") == ["ok"]
@@ -232,10 +229,7 @@ class Command(BaseCommand):
         instances_array = []
         for screenshot in screenshots_array:
             screenshot = "/".join(screenshot.split("/")[-3:])
-            obj = Screenshot()
-            obj.screen_name = screenshot
-            obj.file_screen.name = screenshot
-            obj.save()
+            obj = Screenshot.objects.create(file_screen=screenshot)
             instances_array.append(obj)
 
         return instances_array

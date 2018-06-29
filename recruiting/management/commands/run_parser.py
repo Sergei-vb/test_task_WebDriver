@@ -105,17 +105,16 @@ class Command(BaseCommand):
             url = element.get_attribute('src')
             images_array.append(url)
 
-            check_for_exist = Image.objects.filter(image=url)
-            if not check_for_exist:
+            image_qs = Image.objects.filter(image=url)
+            if not image_qs.exists():
                 path_to_images = os.path.join(settings.MEDIA_ROOT, "images/")
                 filename = url.split("/")[-1]
                 file_path = os.path.join(path_to_images, filename)
                 urlretrieve(url, filename=file_path)
 
-                image = Image()
-                image.image = url
-                image.file_image.name = "images/{0}".format(filename)
-                image.save()
+                Image.objects.create(
+                    image=url, file_image="images/{0}".format(filename)
+                )
         return images_array
 
     def check_vacancies_in_db(self, actual_vacancies):

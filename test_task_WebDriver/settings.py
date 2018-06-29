@@ -80,10 +80,21 @@ WSGI_APPLICATION = 'test_task_WebDriver.wsgi.application'
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': '',
+#         'USER': '',
+#         'PASSWORD': '',
+#         'HOST': '',
+#         'PORT': '',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 
 
 # Password validation
@@ -132,4 +143,19 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     )
+}
+
+
+DATA_ENV_VAR = {
+    "gender": os.getenv("gender"),
+    "first_name": os.getenv("first_name"),
+    "last_name": os.getenv("last_name"),
+    "street": os.getenv("street"),
+    "postal_code": os.getenv("postal_code"),
+    "city": os.getenv("city"),
+    "birthday": os.getenv("birthday"),
+    "phone": os.getenv("phone"),
+    "email": os.getenv("email"),
+    "cv_path": os.getenv("cv_path"),
+    "photo": os.getenv("photo")
 }

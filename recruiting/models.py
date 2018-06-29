@@ -45,11 +45,10 @@ class Vacancy(models.Model):
 
 
 class Screenshot(models.Model):
-    screen_name = models.CharField(max_length=500, null=True)
     file_screen = models.FileField(null=True)
 
     def __str__(self):
-        return self.screen_name
+        return str(self.file_screen)
 
 
 class ExchangeResult(models.Model):
@@ -57,3 +56,6 @@ class ExchangeResult(models.Model):
     created = models.DateTimeField()
     success = models.BooleanField()
     screenshot_list = models.ManyToManyField(Screenshot)
+
+    def __str__(self):
+        return str(self.created)
