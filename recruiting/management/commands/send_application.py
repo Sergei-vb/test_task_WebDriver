@@ -5,11 +5,11 @@ import os
 from urllib import parse
 from urllib.request import urlretrieve
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from selenium import webdriver
 
 from recruiting.models import Screenshot, ExchangeResult, Vacancy
-from test_task_WebDriver.settings import MEDIA_ROOT
 
 
 class Command(BaseCommand):
@@ -22,7 +22,8 @@ class Command(BaseCommand):
 
         self.catalog_name = datetime.datetime.now().isoformat()
         self.path_to_screenshots = os.path.join(
-            MEDIA_ROOT, "screenshot_list/", "{0}".format(self.catalog_name)
+            settings.MEDIA_ROOT, "screenshot_list/",
+            "{0}".format(self.catalog_name)
         )
         os.mkdir(self.path_to_screenshots)
 
@@ -44,12 +45,12 @@ class Command(BaseCommand):
             instances_array = self.create_screenshot_instances(
                 self.screenshots)
             self.create_exchange_result(instances_array, result)
-
-            self.driver.close()
         except:
             self.stderr.write("Unsuccessfully")
         else:
             self.stdout.write(self.style.SUCCESS('Successfully'))
+        finally:
+            self.driver.close()
 
     def handle_first_page(self, url):
         self.driver.get(url)
@@ -113,7 +114,9 @@ class Command(BaseCommand):
 
         self.do_screenshot(4)
 
-        path_to_storage = os.path.join(MEDIA_ROOT, "exchange_handler/")
+        path_to_storage = os.path.join(
+            settings.MEDIA_ROOT, "exchange_handler/"
+        )
 
         path_to_datafile = os.path.join(path_to_storage, "exchange_data.json")
         with open(path_to_datafile, "r") as file:
@@ -228,8 +231,8 @@ class Command(BaseCommand):
     def create_screenshot_instances(self, screenshots_array):
         instances_array = []
         for screenshot in screenshots_array:
-            obj = Screenshot()
             screenshot = "/".join(screenshot.split("/")[-3:])
+            obj = Screenshot()
             obj.screen_name = screenshot
             obj.file_screen.name = screenshot
             obj.save()
@@ -238,14 +241,11 @@ class Command(BaseCommand):
         return instances_array
 
     def create_exchange_result(self, instances_array, result):
-        instance = ExchangeResult()
         vacancy = Vacancy.objects.get(
             title=self.data["title"], company__name=self.data["company"]
         )
-        instance.vacancy = vacancy
-        instance.created = datetime.datetime.now().isoformat()
-        instance.success = result
-        instance.save()
-
+        instance = ExchangeResult.objects.create(
+            vacancy=vacancy, created=datetime.datetime.now().isoformat(),
+            success=result
+        )
         instance.screenshot_list.add(*instances_array)
-        instance.save()
