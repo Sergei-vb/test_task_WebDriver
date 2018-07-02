@@ -169,7 +169,7 @@ class Command(BaseCommand):
         self.do_screenshot(13)
 
         self.driver.find_element_by_xpath(
-            "//select[@name='aufmerksam_geworden']/option[@value='62']"
+            "//select[@name='aufmerksam_geworden']/option[@value='63']"
         ).click()
         self.do_screenshot(14)
 
