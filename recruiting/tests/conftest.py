@@ -30,13 +30,11 @@ def locations(db, city, another_city):
 
 @pytest.fixture
 def vacancy(db, company, locations):
-    obj = Vacancy(
+    obj = Vacancy.objects.create(
         is_active=True, title='vacancy1', description='description1',
         company=company
     )
-    obj.save()
     obj.locations.add(*locations)
-    obj.save()
     return obj
 
 
